@@ -1,0 +1,5 @@
+./src/__pycache
+./src/pyKinectAzure
+./src/kinova_msgs
+./.git
+./.gitinore
