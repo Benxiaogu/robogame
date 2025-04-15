@@ -41,14 +41,17 @@ class Detector:
         #                           0.0, 922.151611328125,547.738037109375,
         #                           0.0, 0.0, 1.0]).reshape(3,3)  # 1080P
 
-        self.K_kinect = np.array([926.658159, 0.000000, 969.015082,
-                                    0.000000, 927.187798, 549.125794,
-                                    0.000000, 0.000000, 1.000000]).reshape(3,3)  # 1080P
+        # self.K_kinect = np.array([926.658159, 0.000000, 969.015082,
+        #                             0.000000, 927.187798, 549.125794,
+        #                             0.000000, 0.000000, 1.000000]).reshape(3,3)  # 1080P
         
         # self.K_kinect = np.array([930.4957055212508, 0.0, 955.3281992157035, 
         #                           0.0, 929.1382318220207, 557.7992310028158, 
         #                           0.0, 0.0, 1.0]).reshape(3,3)  # 1080P
 
+        self.K_kinect = np.array([915.0828247070312, 0.0, 961.7936401367188, 
+                                  0.0, 914.6190185546875, 555.453369140625, 
+                                  0.0, 0.0, 1.0]).reshape(3,3)  # 1080P
 
         self.K_realsense =  np.array([605.94,0,320.65,
                                       0,605.61,241.75,
@@ -160,13 +163,13 @@ class Detector:
                         #         y = yolor.y
     
                         #         d = depth_image[int(y),int(x)]
-                        #         pixels = k4a_float2_t((y, x))
+                        #         pixels = k4a_float2_t((x, y))
                         #         if d > 0:  # 确保深度值有效
                         #             # 计算三维坐标
                         #             xyz = calibration.convert_2d_to_3d(pixels, d, K4A_CALIBRATION_TYPE_COLOR, K4A_CALIBRATION_TYPE_COLOR)
                         #             xyz_depth = calibration.convert_2d_to_3d(pixels, d, K4A_CALIBRATION_TYPE_COLOR, K4A_CALIBRATION_TYPE_DEPTH)
                         #             print("xyz: ",xyz.xyz)
-                        #             # print("xyz_depth: ",xyz_depth.xyz)
+                        #             print("xyz_depth: ",xyz_depth.xyz)
                         #             xyz=xyz_depth
                         #             X, Y, Z = xyz.xyz.x/1000.0, xyz.xyz.y/1000.0, xyz.xyz.z/1000.0
                         #             point = [X, Y, Z]
@@ -564,6 +567,7 @@ class Detector:
         point_image = np.array([x,y,1])  # 图像坐标系
         # point = np.dot(K, point_image) * z*10e-4 # 相机坐标系
         point = z * np.linalg.inv(K).dot(point_image)
+        print(f"point: {point}")
 
         return point
 

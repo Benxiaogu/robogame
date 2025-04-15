@@ -44,7 +44,8 @@ class KinovaRobot:
         self.currentFingerPosition = [0.0, 0.0, 0.0]
         # self.currentCartesianCommand = [0.21258243918418884, -0.25638914108276367, 0.50766521692276, 1.648742437362671, 1.1138312816619873, 0.50766521692276] # default home in unit mq
         self.currentCartesianCommand = [0.2104809731245041, -0.25873029232025146, 0.5095799565315247, 1.6373136043548584, 1.1021580696105957, 0.5095799565315247]
-        self.homePositionMdeg = [0.2104809731245041, -0.25873029232025146, 0.5095799565315247, 81.040, 83.972, 11.606]
+        # self.homePositionMdeg = [0.2104809731245041, -0.25873029232025146, 0.5095799565315247, 81.040, 83.972, 11.606]
+        self.init_pose = [0.36157482862472534, 0.10528099536895752, 0.5518933534622192, 81.040, 83.972, 11.606]
         self.getcurrentCartesianCommand()
         self.action_address_arm = '/' + self.prefix + 'driver/pose_action/tool_pose'
         self.client_arm = actionlib.SimpleActionClient(self.action_address_arm, kinova_msgs.msg.ArmPoseAction)
@@ -65,8 +66,19 @@ class KinovaRobot:
         # self.observe = [0.3975765824317932, -0.09243141114711761, 0.223219232559204, 57.052, 89.704, 36.111]
         # self.observe_up = [0.3975765824317932, -0.09243141114711761, 0.443219232559204, 57.052, 89.704, 36.111]
 
-        self.arm_run(pose_target=self.homePositionMdeg)
+        self.arm_run(pose_target=self.init_pose)
         # self.arm_run(pose_target=self.observe)
+
+
+# translation: 
+#   x: 1.3770057834549245
+#   y: -0.2412003234934955
+#   z: 1.1389934196882465
+# rotation: 
+#   x: -0.6623319419347857
+#   y: -0.49721831394149835
+#   z: 0.23229646282231145
+#   w: 0.5100281368065014
 
         # qw = 0.9253157381720597
         # qx = 0.06627723386580903
@@ -75,6 +87,13 @@ class KinovaRobot:
         # tx = 0.3736087834130508
         # ty = -0.50307384193553
         # tz = 0.5675200940448776
+        # qw= 0.45429706054764263
+        # qx= -0.535903911049248
+        # qy= 0.5277709785169646
+        # qz= -0.47736670719179514
+        # tx =-0.1502858702037763
+        # ty =-0.021521096750382464
+        # tz =1.0976953673920185
         # R = self.quaternion_to_rotation_matrix(qw,qx,qy,qz)
         # self.kinectA2kinova_matrix = np.eye(4)  # Initialize a 4x4 identity matrix
         # self.kinectA2kinova_matrix[:3, :3] = R  # Set rotation
@@ -89,12 +108,15 @@ class KinovaRobot:
         #                                         [0.19947593, -0.90661996, -0.37181931,  1.13899342],
         #                                         [0.        ,  0.        ,  0.        ,  1.        ]])
         
-        self.kinectA2kinova_matrix = np.array([[ 0.0680977  , 0.57993979 ,-0.8118082  , 1.31925447],
-                                                [ 0.99319388,  0.03765974,  0.11021642, -0.00671641],
-                                                [ 0.09449137, -0.81378842, -0.57342811,  0.88751502],
-                                                [ 0.        ,  0.        ,  0.        ,  1.        ],])
+        # self.kinectA2kinova_matrix = np.array([[ 0.0680977  , 0.57993979 ,-0.8118082  , 1.31925447],
+        #                                         [ 0.99319388,  0.03765974,  0.11021642, -0.00671641],
+        #                                         [ 0.09449137, -0.81378842, -0.57342811,  0.88751502],
+        #                                         [ 0.        ,  0.        ,  0.        ,  1.        ],])
 
-
+        self.kinectA2kinova_matrix = np.array([[-0.09811982, -0.50830614,  0.85556845, -0.11490607],
+                                                [-0.98824356, -0.05152143, -0.14394517, -0.00222445],
+                                                [ 0.11724832, -0.85963388, -0.49727499,  1.07570852],
+                                                [ 0. ,         0.  ,        0.   ,       1.        ]])
 
         # self.kinectB2kinova_matrix = np.array([[0]])
 
@@ -452,13 +474,15 @@ if __name__ == "__main__":
     kinova = KinovaRobot("j2n6s300")
     rospy.timer.sleep(3)
     detector = Detector()
-    result = detector.detect(camera='k4a',pattern='find',target='bottle',depth=True,range=0.9)
+    result = detector.detect(camera='k4a',pattern='find',target='bottle',depth=True,range=0.8)
     for name, xyz in result[0].items():
         print(f"xyz: {xyz}")
         # xyz[2]
         xyz_arm = kinova.transform(xyz)
-        pose_target_1 = [xyz_arm[0],xyz_arm[1],xyz_arm[2]+0.2]
-        pose_target_2 = [xyz_arm[0],xyz_arm[1],xyz_arm[2]]
+        y_error = xyz_arm[1] * 0.1
+        pose_target_1 = [xyz_arm[0]-0.15,xyz_arm[1]+0.06+abs(y_error)*(xyz_arm[1]<0),xyz_arm[2]+0.05+y_error*0.4]
+        pose_target_2 = [xyz_arm[0]-0.06,xyz_arm[1]+0.06+abs(y_error)*(xyz_arm[1]<0),xyz_arm[2]+0.05+y_error*0.4]
+        pose_target_3 = [xyz_arm[0]-0.15,xyz_arm[1]+0.06+abs(y_error)*(xyz_arm[1]<0),xyz_arm[2]+0.25+y_error*0.4]
         # 81.040, ty 83.972, tz 11.606
         pose_target_1.extend([81.040, 83.972, 11.606])
         print("pose_target_1: ",pose_target_1)
@@ -467,8 +491,85 @@ if __name__ == "__main__":
         pose_target_2.extend([81.040, 83.972, 11.606])
         print("pose_target_2: ",pose_target_2)
         kinova.arm_run(pose_target=pose_target_2)
-        time.sleep(2)
+        time.sleep(1)
+        pose_target_3.extend([81.040, 83.972, 11.606])
+        print("pose_target_3: ",pose_target_3)
         kinova.finger_run(finger_target=[95,95,95])
+        kinova.arm_run(pose_target=pose_target_3)
+        kinova.arm_run(pose_target=kinova.init_pose)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # for name, xyz in result[0].items():
+    #     print("xyz: ",xyz)
+    #     xyz_target = kinova.image_to_arm(xyz[0],xyz[2],xyz[1])
+    #     # xyz_target = kinova.image_to_arm(xyz[0],xyz[1],xyz[2])
+    #     print("xyz_target: ",xyz_target)
+    #     euler = [57.052, 89.704, 36.111]
+    #     pose_target = [xyz_target[0],xyz_target[1],xyz_target[2]]
+    #     pose_target.extend(euler)
+    #     pose_, ori_deg = kinova.verboseParser(verbose=True)
+    #     pose_target = [xyz_target[0]+pose_[0]-0.08, xyz_target[1]+pose_[1]-0.13,xyz_target[2]+pose_[2]+0.12,euler[0],euler[1],euler[2]]
+    #     kinova.arm_run(pose_target=pose_target,relative=False)
+    #     time.sleep(2)
+    #     kinova.finger_run(finger_target=[95,95,95])
+    #     time.sleep(2)
+    #     kinova.arm_run(pose_target=kinova.observe_up)
+
+
+
+
+
+    # # name,xyz = result[0].items()
+    #     print("xyz: ",xyz)
+    #     xyz_arm = kinova.transform([xyz[0],xyz[1],xyz[2]])
+
+    #     print("xyz_arm: ",type(xyz_arm))
+    #     print(xyz_arm.shape)
+    #     print(xyz_arm[0],xyz_arm[1],xyz_arm[2])
+
+    #     pose_target_1 = [xyz_arm[0]+0.05,xyz_arm[1]+0.06,xyz_arm[2]]
+    #     pose_target_2 = [xyz_arm[0]+0.05,xyz_arm[1]+0.06,xyz_arm[2]-0.2]
+    #     # 81.040, ty 83.972, tz 11.606
+    #     pose_target_1.extend([81.040, 83.972, 11.606])
+    #     print("pose_target_1: ",pose_target_1)
+    #     # kinova.arm_run(pose_target=pose_target_1)
+    #     # time.sleep(2)
+    #     pose_target_2.extend([81.040, 83.972, 11.606])
+    #     print("pose_target_2: ",pose_target_2)
+        # kinova.arm_run(pose_target=pose_target_2)
+        # time.sleep(2)
+        # kinova.finger_run(finger_target=[95,95,95])
+
+
+# 0.48333248496055603, -0.06454424560070038, 0.12640617787837982
+
+    # pose_value = [0, 0, 0, 0, 0, 0]
+    # pose_value = [0.21106165647506714, -0.2587187886238098, 0.5096041560173035, 93.819, 63.324, 8.105]
+    # pose_value = [0.21106165647506714, -0.2587187886238098, 0.5096041560173035, 0, 0, 0]
+    # kinova.arm_run(pose_target=pose_value, relative=True)
+
+
+
+
+
+
+
     
     
     
